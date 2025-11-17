@@ -159,8 +159,10 @@ class SPRTRunner:
                 opening = self.openings[game_idx % len(self.openings)]
                 board = chess.Board() if opening in (None, "startpos") else chess.Board(opening)
                 white_is_a = game_idx % 2 == 0
-                outcome = self._play_game(board, eng_a, eng_b, limit, white_is_a)
-                score_a = outcome if white_is_a else 1.0 - outcome
+                white_score, move_count, score_symbol = self._play_game(
+                    board, eng_a, eng_b, limit, white_is_a
+                )
+                score_a = white_score if white_is_a else 1.0 - white_score
                 llr += self.config.bounds.likelihood_ratio(score_a)
                 bin_idx = min(len(board.move_stack) // 20, 4)
                 penta[bin_idx] += 1
@@ -170,6 +172,15 @@ class SPRTRunner:
                     wins_b += 1
                 else:
                     draws += 1
+
+                total_played = wins_a + wins_b + draws
+                print(
+                    f"[Game {total_played}/{self.config.games}] "
+                    f"{'A' if white_is_a else 'B'} (white) vs "
+                    f"{'B' if white_is_a else 'A'} (black) -> {score_symbol} "
+                    f"moves={move_count} llr={llr:.3f}",
+                    flush=True,
+                )
 
                 if llr >= self.config.bounds.upper:
                     verdict = "accept H1"
@@ -201,7 +212,7 @@ class SPRTRunner:
         eng_b: chess.engine.SimpleEngine,
         limit: chess.engine.Limit,
         white_is_a: bool,
-    ) -> float:
+    ) -> tuple[float, int, str]:
         white_engine = eng_a if white_is_a else eng_b
         black_engine = eng_b if white_is_a else eng_a
         while not board.is_game_over(claim_draw=True):
@@ -210,18 +221,27 @@ class SPRTRunner:
                 result = engine.play(board, limit)
             except (chess.engine.EngineError, chess.engine.EngineTerminatedError):
                 if engine is white_engine:
-                    return 0.0
-                return 1.0
+                    result = 0.0
+                    break
+                result = 1.0
+                break
             move = result.move
             if move is None:
                 if engine is white_engine:
-                    return 0.0
-                return 1.0
+                    result = 0.0
+                    break
+                result = 1.0
+                break
             board.push(move)
-        outcome = board.outcome(claim_draw=True)
-        if outcome is None or outcome.winner is None:
-            return 0.5
-        return 1.0 if outcome.winner == chess.WHITE else 0.0
+        else:
+            outcome = board.outcome(claim_draw=True)
+            if outcome is None or outcome.winner is None:
+                result = 0.5
+            else:
+                result = 1.0 if outcome.winner == chess.WHITE else 0.0
+        moves = len(board.move_stack)
+        score_symbol = "1-0" if result == 1.0 else "0-1" if result == 0.0 else "1/2-1/2"
+        return result, moves, score_symbol
 
 
 def load_openings(epd_path: Path) -> List[Optional[str]]:
