@@ -76,13 +76,15 @@ python scripts/run_sprt.py \
   --engine-a ../FlintCore-base/build-sprt/FlintCore --name-a baseline \
   --engine-b ../FlintCore-contender/build-sprt/FlintCore --name-b contender \
   --games 400 --movetime 0.40 --threads 1 --hash-mb 8 \
+  --threads-a 1 --threads-b 1 --hash-a 8 --hash-b 16 \
   --report sprt_summary.txt
 ```
 
 The bundled `flintcoretest/data/sprt_openings.epd` file supplies a neutral set of starting positions,
 but you can point `--openings` at any EPD/plain-text file you prefer.  Use `--sprt-elo0/--sprt-elo1` to
 set the H0/H1 boundaries, and adjust `--alpha/--beta` for the desired false-positive / false-negative
-rates.
+rates.  `--threads-a/--threads-b` and `--hash-a/--hash-b` override the per-engine UCI options while the
+generic `--threads/--hash-mb` values control the defaults and summary metadata.
 
 ## GitHub Actions workflows
 
@@ -90,9 +92,11 @@ Alongside `ci.yml`, this repo provides `.github/workflows/sprt.yml` which target
 matches for two FlintCore commits.  The workflow is `workflow_dispatch`-only and accepts the
 following inputs:
 
-- `base_ref` – git ref/commit for the baseline engine.
-- `contender_ref` – git ref/commit for the candidate engine.
-- `games`, `movetime`, `hash_mb`, and `threads` – forwarded to `scripts/run_sprt.py`.
+  - `base_ref` – git ref/commit for the baseline engine.
+  - `contender_ref` – git ref/commit for the candidate engine.
+  - `games`, `movetime`, `hash_mb`, and `threads` – forwarded to `scripts/run_sprt.py`.
+  - `base_threads`, `contender_threads`, `base_hash`, `contender_hash` – per-engine overrides applied
+    to the UCI options before the match starts.
 
 Because the FlintCore repository is private, add a classic personal access token (PAT) with `repo`
 read access as a repository secret on the *FlintCoreTesting* repo (the workflow expects

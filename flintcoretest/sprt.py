@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
@@ -41,7 +41,13 @@ class SPRTConfig:
     base_moves: float = 40.0
     hash_mb: int = 8
     threads: int = 1
-    bounds: SPRTBounds = SPRTBounds()
+    bounds: SPRTBounds = field(default_factory=SPRTBounds)
+
+
+@dataclass
+class EngineOptions:
+    threads: int = 1
+    hash_mb: int = 8
 
 
 @dataclass
@@ -63,12 +69,22 @@ class SPRTResult:
     def elo_and_ci(self) -> tuple[float, float]:
         return elo_with_confidence(self.score, self.games_played)
 
-    def summary_lines(self, config: SPRTConfig, label_a: str, label_b: str) -> List[str]:
+    def summary_lines(
+        self,
+        config: SPRTConfig,
+        label_a: str,
+        label_b: str,
+        opts_a: EngineOptions | None = None,
+        opts_b: EngineOptions | None = None,
+    ) -> List[str]:
         elo, margin = self.elo_and_ci()
+        opts_a = opts_a or EngineOptions(threads=config.threads, hash_mb=config.hash_mb)
+        opts_b = opts_b or EngineOptions(threads=config.threads, hash_mb=config.hash_mb)
         lines = [
             f"Engines | {label_a} vs {label_b}",
             f"Elo   | {elo:.2f} +- {margin:.2f} (95%)",
-            f"Conf  | {config.base_moves:.1f}+{config.movetime_s:.2f}s Threads={config.threads} Hash={config.hash_mb}MB",
+            f"Conf  | {config.base_moves:.1f}+{config.movetime_s:.2f}s",
+            f"Opts  | A: Threads={opts_a.threads} Hash={opts_a.hash_mb}MB | B: Threads={opts_b.threads} Hash={opts_b.hash_mb}MB",
             f"Games | N: {self.games_played} W: {self.wins_a} L: {self.wins_b} D: {self.draws}",
             f"Penta | {self.penta}",
             f"SPRT  | LLR={self.llr:.3f} bounds=({config.bounds.lower:.3f}, {config.bounds.upper:.3f}) verdict={self.verdict}",
@@ -106,6 +122,8 @@ class SPRTRunner:
         config: SPRTConfig,
         name_a: str = "EngineA",
         name_b: str = "EngineB",
+        options_a: EngineOptions | None = None,
+        options_b: EngineOptions | None = None,
     ) -> None:
         if not openings:
             raise ValueError("At least one opening is required")
@@ -115,6 +133,14 @@ class SPRTRunner:
         self.config = config
         self.name_a = name_a
         self.name_b = name_b
+        self.options_a = options_a or EngineOptions(
+            threads=config.threads,
+            hash_mb=config.hash_mb,
+        )
+        self.options_b = options_b or EngineOptions(
+            threads=config.threads,
+            hash_mb=config.hash_mb,
+        )
 
     def run(self) -> SPRTResult:
         limit = chess.engine.Limit(time=self.config.movetime_s)
@@ -126,8 +152,8 @@ class SPRTRunner:
         with chess.engine.SimpleEngine.popen_uci(str(self.engine_a)) as eng_a, chess.engine.SimpleEngine.popen_uci(
             str(self.engine_b)
         ) as eng_b:
-            self._configure_engine(eng_a)
-            self._configure_engine(eng_b)
+            self._configure_engine(eng_a, self.options_a)
+            self._configure_engine(eng_b, self.options_b)
 
             for game_idx in range(self.config.games):
                 opening = self.openings[game_idx % len(self.openings)]
@@ -157,10 +183,10 @@ class SPRTRunner:
         games_played = wins_a + wins_b + draws
         return SPRTResult(wins_a, wins_b, draws, games_played, llr, verdict, penta)
 
-    def _configure_engine(self, engine: chess.engine.SimpleEngine) -> None:
+    def _configure_engine(self, engine: chess.engine.SimpleEngine, opts: EngineOptions) -> None:
         options = {
-            "Threads": self.config.threads,
-            "Hash": self.config.hash_mb,
+            "Threads": opts.threads,
+            "Hash": opts.hash_mb,
         }
         for key, value in options.items():
             try:

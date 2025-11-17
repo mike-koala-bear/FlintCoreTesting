@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from flintcoretest.sprt import SPRTBounds, SPRTConfig, SPRTRunner, load_openings
+from flintcoretest.sprt import EngineOptions, SPRTBounds, SPRTConfig, SPRTRunner, load_openings
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,8 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--games", type=int, default=200, help="Maximum number of games to play")
     parser.add_argument("--movetime", type=float, default=0.40, help="Move time in seconds for each engine")
     parser.add_argument("--base-moves", type=float, default=40.0, help="Base moves displayed in the summary")
-    parser.add_argument("--threads", type=int, default=1, help="UCI Threads option when supported")
-    parser.add_argument("--hash-mb", type=int, default=8, help="UCI Hash option when supported")
+    parser.add_argument("--threads", type=int, default=1, help="Default Threads value when supported")
+    parser.add_argument("--threads-a", type=int, dest="threads_a", help="Override Threads for engine A")
+    parser.add_argument("--threads-b", type=int, dest="threads_b", help="Override Threads for engine B")
+    parser.add_argument("--hash-mb", type=int, default=8, help="Default Hash value in MB when supported")
+    parser.add_argument("--hash-a", type=int, dest="hash_a", help="Override Hash (MB) for engine A")
+    parser.add_argument("--hash-b", type=int, dest="hash_b", help="Override Hash (MB) for engine B")
     parser.add_argument("--openings", type=Path, default=default_openings, help="EPD/startpos list used to seed games")
     parser.add_argument("--sprt-elo0", type=float, default=-2.0, help="Null hypothesis Elo for SPRT")
     parser.add_argument("--sprt-elo1", type=float, default=2.0, help="Alternative hypothesis Elo for SPRT")
@@ -42,6 +46,14 @@ def main() -> None:
         bounds=bounds,
     )
     openings = load_openings(args.openings)
+    options_a = EngineOptions(
+        threads=args.threads_a if args.threads_a is not None else args.threads,
+        hash_mb=args.hash_a if args.hash_a is not None else args.hash_mb,
+    )
+    options_b = EngineOptions(
+        threads=args.threads_b if args.threads_b is not None else args.threads,
+        hash_mb=args.hash_b if args.hash_b is not None else args.hash_mb,
+    )
     runner = SPRTRunner(
         engine_a=args.engine_a.expanduser().resolve(),
         engine_b=args.engine_b.expanduser().resolve(),
@@ -49,9 +61,11 @@ def main() -> None:
         config=config,
         name_a=args.name_a,
         name_b=args.name_b,
+        options_a=options_a,
+        options_b=options_b,
     )
     result = runner.run()
-    lines = result.summary_lines(config, args.name_a, args.name_b)
+    lines = result.summary_lines(config, args.name_a, args.name_b, options_a, options_b)
     for line in lines:
         print(line)
     if args.report:

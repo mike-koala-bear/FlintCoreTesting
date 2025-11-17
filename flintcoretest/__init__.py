@@ -2,6 +2,7 @@
 from .engine_runner import EngineHarness, EngineNotFoundError
 from .perft_cases import PerftExpectation, DEFAULT_PERFT_CASES
 from .sprt import (
+    EngineOptions,
     SPRTBounds,
     SPRTConfig,
     SPRTRunner,
@@ -15,6 +16,7 @@ __all__ = [
     "EngineNotFoundError",
     "PerftExpectation",
     "DEFAULT_PERFT_CASES",
+    "EngineOptions",
     "SPRTBounds",
     "SPRTConfig",
     "SPRTRunner",

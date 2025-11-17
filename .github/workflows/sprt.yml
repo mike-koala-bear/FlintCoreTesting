@@ -27,6 +27,22 @@ on:
         description: "Hash size in MB"
         required: true
         default: "8"
+      base_threads:
+        description: "Threads for engine A"
+        required: true
+        default: "1"
+      contender_threads:
+        description: "Threads for engine B"
+        required: true
+        default: "1"
+      base_hash:
+        description: "Hash MB for engine A"
+        required: true
+        default: "8"
+      contender_hash:
+        description: "Hash MB for engine B"
+        required: true
+        default: "8"
 
 env:
   FLINTCORE_REPOSITORY: mike-koala-bear/FlintCore  # Update with your private repo owner/name
@@ -94,6 +110,8 @@ jobs:
             --engine-b FlintCore-contender/build-sprt/FlintCore --name-b "${{ inputs.contender_ref }}" \
             --games ${{ inputs.games }} --movetime ${{ inputs.movetime }} \
             --threads ${{ inputs.threads }} --hash-mb ${{ inputs.hash_mb }} \
+            --threads-a ${{ inputs.base_threads }} --threads-b ${{ inputs.contender_threads }} \
+            --hash-a ${{ inputs.base_hash }} --hash-b ${{ inputs.contender_hash }} \
             --report sprt_summary.txt
 
       - name: Upload SPRT summary artifact
