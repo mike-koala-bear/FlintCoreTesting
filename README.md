@@ -96,9 +96,10 @@ following inputs:
 
 Because the FlintCore repository is private, add a classic personal access token (PAT) with `repo`
 read access as a repository secret on the *FlintCoreTesting* repo (the workflow expects
-`FLINTCORE_TOKEN`).  The action uses that token to clone the private engine twice, builds each ref in
-its own directory, runs the SPRT script, and uploads the textual summary as an artifact and job
-summary.
+`FLINTCORE_TOKEN`).  The workflow now validates the secret at the start and fails fast with a helpful
+message when it is missing.  With the secret in place, the action clones the private engine twice,
+builds each ref in its own directory, runs the SPRT script, and uploads the textual summary as an
+artifact and job summary.
 
 ## Extending the suite
 

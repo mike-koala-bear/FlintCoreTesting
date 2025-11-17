@@ -36,7 +36,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      CHECK_TOKEN: ${{ secrets.FLINTCORE_TOKEN }}
     steps:
+      - name: Validate FlintCore token
+        run: |
+          if [ -z "${CHECK_TOKEN}" ]; then
+            echo "::error::Missing FLINTCORE_TOKEN secret. Add a classic PAT with repo read access."
+            exit 1
+          fi
+
       - name: Check out FlintCoreTesting
         uses: actions/checkout@v4
 
