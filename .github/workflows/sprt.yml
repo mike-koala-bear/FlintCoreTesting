@@ -1,0 +1,97 @@
+name: FlintCore SPRT
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Baseline ref (commit, tag, or branch)"
+        required: true
+        default: main
+      contender_ref:
+        description: "Contender ref"
+        required: true
+        default: main
+      games:
+        description: "Maximum number of games"
+        required: true
+        default: "400"
+      movetime:
+        description: "Move time in seconds"
+        required: true
+        default: "0.40"
+      threads:
+        description: "Threads UCI option"
+        required: true
+        default: "1"
+      hash_mb:
+        description: "Hash size in MB"
+        required: true
+        default: "8"
+
+env:
+  FLINTCORE_REPOSITORY: FlintCoreOrg/FlintCore  # Update with your private repo owner/name
+
+jobs:
+  sprt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out FlintCoreTesting
+        uses: actions/checkout@v4
+
+      - name: Check out baseline FlintCore
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FLINTCORE_REPOSITORY }}
+          ref: ${{ inputs.base_ref }}
+          token: ${{ secrets.FLINTCORE_TOKEN }}
+          path: FlintCore-base
+
+      - name: Check out contender FlintCore
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FLINTCORE_REPOSITORY }}
+          ref: ${{ inputs.contender_ref }}
+          token: ${{ secrets.FLINTCORE_TOKEN }}
+          path: FlintCore-contender
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Configure baseline engine
+        run: cmake -S FlintCore-base -B FlintCore-base/build-sprt -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build baseline engine
+        run: cmake --build FlintCore-base/build-sprt --config Release -j 2
+
+      - name: Configure contender engine
+        run: cmake -S FlintCore-contender -B FlintCore-contender/build-sprt -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build contender engine
+        run: cmake --build FlintCore-contender/build-sprt --config Release -j 2
+
+      - name: Run SPRT head-to-head
+        run: |
+          python scripts/run_sprt.py \
+            --engine-a FlintCore-base/build-sprt/FlintCore --name-a "${{ inputs.base_ref }}" \
+            --engine-b FlintCore-contender/build-sprt/FlintCore --name-b "${{ inputs.contender_ref }}" \
+            --games ${{ inputs.games }} --movetime ${{ inputs.movetime }} \
+            --threads ${{ inputs.threads }} --hash-mb ${{ inputs.hash_mb }} \
+            --report sprt_summary.txt
+
+      - name: Upload SPRT summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprt-summary
+          path: sprt_summary.txt
+
+      - name: Publish summary to job
+        run: cat sprt_summary.txt >> "$GITHUB_STEP_SUMMARY"

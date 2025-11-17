@@ -1,0 +1,45 @@
+name: FlintCore Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FLINTCORE_REPOSITORY: FlintCoreOrg/FlintCore  # Update this to your actual repo name
+  FLINTCORE_SOURCE_DIR: ${{ github.workspace }}/FlintCore
+  FLINTCORE_BUILD_DIR: ${{ github.workspace }}/FlintCore/build-ci
+  FLINTCORE_ENGINE_PATH: ${{ github.workspace }}/FlintCore/build-ci/FlintCore
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out testing platform
+        uses: actions/checkout@v4
+
+      - name: Check out FlintCore engine
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FLINTCORE_REPOSITORY }}
+          path: FlintCore
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Configure FlintCore
+        run: cmake -S "$FLINTCORE_SOURCE_DIR" -B "$FLINTCORE_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build FlintCore
+        run: cmake --build "$FLINTCORE_BUILD_DIR" --config Release -j 2
+
+      - name: Run pytest suite
+        run: pytest -q

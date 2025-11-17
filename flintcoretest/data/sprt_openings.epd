@@ -1,0 +1,18 @@
+# Balanced miniature opening suite (FEN or startpos tokens)
+startpos
+rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+r1bqkbnr/pppp1ppp/2n5/3Np3/4P3/8/PPPP1PPP/R1BQKBNR b KQkq - 2 4
+r1bqkb1r/pppppppp/2n2n2/8/2BP4/5N2/PPP2PPP/RNBQK2R b KQkq - 2 4
+rnbqkb1r/pppppppp/5n2/8/2BPP3/5N2/PPP2PPP/RNBQK2R b KQkq - 2 3
+r1bq1rk1/ppppbppp/2n2n2/4p3/2B1P3/1NNP1N2/PPP2PPP/R1BQ1RK1 w - - 4 8
+r1bq1rk1/ppppbppp/2n2n2/4p3/2B1P3/1NNP1N2/PPP2PPP/R1BQR1K1 b - - 5 8
+r1bq1rk1/pppp1ppp/2n2n2/4p3/1bB1P3/1NNP1N2/PPP2PPP/R1BQR1K1 w - - 7 9
+r1bq1rk1/pppp1ppp/2n2n2/4p3/1bB1P3/1NNP1N2/PPP2PPP/R1BQR1K1 b - - 7 9
+r1bq1rk1/pppp1ppp/2n2n2/4p3/2B1P3/1NNP4/PPPB1PPP/R2Q1RK1 b - - 10 10
+r2q1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/1NN5/PPP2PPP/R2Q1RK1 w - - 0 11
+r2q1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/1NN5/PPP2PPP/R2QR1K1 b - - 1 11
+r2q1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/1NN5/PPP2PPP/R2QR1K1 w - - 1 12
+r2q1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/1NN5/PPP2PPP/2RQR1K1 b - - 2 12
+r1bq1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/2N2N2/PPPQ1PPP/2KR2R1 b - - 0 11
+r1bq1rk1/ppp2ppp/2n2n2/3pp3/3PP3/2NB1N2/PPPQ1PPP/2KR3R b - - 2 11
+r1bq1rk1/ppp2ppp/2n2n2/3pp3/2BPP3/2N2N2/PPPQ1PPP/2KR3R w - - 1 12
