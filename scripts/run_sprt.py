@@ -2,7 +2,18 @@
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 from pathlib import Path
+
+
+def _ensure_repo_on_path() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
+
+_ensure_repo_on_path()
 
 from flintcoretest.sprt import EngineOptions, SPRTBounds, SPRTConfig, SPRTRunner, load_openings
 
@@ -34,6 +45,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _verify_engine(path: Path, label: str) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.exists():
+        raise SystemExit(
+            f"Engine '{label}' not found at {resolved}. Build FlintCore (scripts/build_engine.py) or"
+            " adjust the --engine-* arguments."
+        )
+    if not resolved.is_file():
+        raise SystemExit(f"Engine path for '{label}' is not a file: {resolved}")
+    if not os.access(resolved, os.X_OK):
+        raise SystemExit(f"Engine binary for '{label}' is not executable: {resolved}")
+    return resolved
+
+
 def main() -> None:
     args = parse_args()
     bounds = SPRTBounds(elo0=args.sprt_elo0, elo1=args.sprt_elo1, alpha=args.alpha, beta=args.beta)
@@ -54,9 +79,11 @@ def main() -> None:
         threads=args.threads_b if args.threads_b is not None else args.threads,
         hash_mb=args.hash_b if args.hash_b is not None else args.hash_mb,
     )
+    engine_a = _verify_engine(args.engine_a, args.name_a)
+    engine_b = _verify_engine(args.engine_b, args.name_b)
     runner = SPRTRunner(
-        engine_a=args.engine_a.expanduser().resolve(),
-        engine_b=args.engine_b.expanduser().resolve(),
+        engine_a=engine_a,
+        engine_b=engine_b,
         openings=openings,
         config=config,
         name_a=args.name_a,
