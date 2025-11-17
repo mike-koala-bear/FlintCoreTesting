@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  FLINTCORE_REPOSITORY: FlintCoreOrg/FlintCore  # Update this to your actual repo name
+  FLINTCORE_REPOSITORY: mike-koala-bear/FlintCore  # Update this to your actual repo name
   FLINTCORE_SOURCE_DIR: ${{ github.workspace }}/FlintCore
   FLINTCORE_BUILD_DIR: ${{ github.workspace }}/FlintCore/build-ci
   FLINTCORE_ENGINE_PATH: ${{ github.workspace }}/FlintCore/build-ci/FlintCore

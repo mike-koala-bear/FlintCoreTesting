@@ -29,7 +29,7 @@ on:
         default: "8"
 
 env:
-  FLINTCORE_REPOSITORY: FlintCoreOrg/FlintCore  # Update with your private repo owner/name
+  FLINTCORE_REPOSITORY: mike-koala-bear/FlintCore  # Update with your private repo owner/name
 
 jobs:
   sprt:
